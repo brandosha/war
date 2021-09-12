@@ -1,0 +1,15 @@
+{
+  "devDependencies": {
+    "@types/node": "^16.9.0",
+    "@types/ws": "^7.4.7",
+    "@typescript-eslint/eslint-plugin": "^4.31.0",
+    "@typescript-eslint/parser": "^4.31.0",
+    "eslint": "^7.32.0"
+  },
+  "dependencies": {
+    "ws": "^8.2.2"
+  },
+  "scripts": {
+    "start": "ts-node server.ts"
+  }
+}

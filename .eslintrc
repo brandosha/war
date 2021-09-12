@@ -1,0 +1,49 @@
+{
+  "env": { "browser": true, "es6": true },
+  "parserOptions": {
+    "ecmaVersion": 2018,
+    "sourceType": "module"
+  },
+  "extends": [
+    "eslint:recommended"
+  ],
+  "rules": {
+    "quotes": ["warn", "double", { "avoidEscape": true }],
+    "brace-style": ["warn", "1tbs", { "allowSingleLine": true }],
+    "curly": ["warn"],
+    "indent": ["warn", 2],
+    "space-infix-ops": "warn",
+    "object-curly-spacing": ["warn", "always"],
+    "key-spacing": "warn",
+    "block-spacing": "warn",
+    "arrow-spacing": "warn"
+  },
+  "overrides": [
+    {
+      "files": "**/*.ts",
+      "env": { "browser": false, "node": true },
+      "parser": "@typescript-eslint/parser",
+      "plugins": [
+        "@typescript-eslint"
+      ],
+      "extends": [
+        "eslint:recommended",
+        "plugin:@typescript-eslint/eslint-recommended",
+        "plugin:@typescript-eslint/recommended"
+      ],
+      "rules": {
+        "quotes": ["warn", "double", { "avoidEscape": true }],
+        "brace-style": ["warn", "1tbs", { "allowSingleLine": true }],
+        "curly": ["warn"],
+        "indent": ["warn", 2],
+        "space-infix-ops": "warn",
+        "object-curly-spacing": ["warn", "always"],
+        "key-spacing": "warn",
+        "block-spacing": "warn",
+        "arrow-spacing": "warn",
+        "@typescript-eslint/ban-ts-comment": "off",
+        "@typescript-eslint/explicit-module-boundary-types": "off"
+      }
+    }
+  ]
+}
