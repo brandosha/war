@@ -67,6 +67,14 @@ export default class Game {
     const { players } = this
 
     const rand = mulberry32(parseInt(this.id.substr(0, 6), 36))
+    const playerIndices = Array.from({ length: players.length }, (_, i) => i)
+    for (let i = 0; i < players.length; i++) {
+      const swapIndex = playerIndices[Math.floor(rand() * players.length)]
+
+      const tempVal = playerIndices[i]
+      playerIndices[i] = playerIndices[swapIndex]
+      playerIndices[swapIndex] = tempVal
+    }
 
     const tiles: Tile[][] = []
     const boardSize = Math.ceil(4 * Math.sqrt(players.length))
@@ -201,6 +209,7 @@ export default class Game {
   getTile(coord: Coordinate): Tile
   getTile(rowOrCoord: number | Coordinate, col?: number) {
     const boardSize = this.board.length
+    if (!boardSize) { return null }
 
     if (typeof rowOrCoord === "number") {
       if (typeof col !== "number") { return null }
@@ -221,6 +230,7 @@ export default class Game {
   setTile(coord: Coordinate, value: Tile): void
   setTile(rowOrCoord: number | Coordinate, colOrValue: number | Tile, value?: Tile) {
     const boardSize = this.board.length
+    if (!boardSize) { return null }
 
     if (typeof rowOrCoord === "number") {
       if (typeof colOrValue !== "number") { return }
@@ -248,6 +258,7 @@ export default class Game {
 
     const tile0 = this.getTile(fromTile)
     if (!tile0 || tile0.force < force) { return false }
+    if (tile0.base && force === tile0.force) { return false }
 
     const directionCoord = Game.Direction[direction]
     if (!directionCoord) { return false }
@@ -264,7 +275,9 @@ export default class Game {
         force
       })
     } else {
-      if (tile0.owner !== tile1.owner && force === tile0.force) { return false }
+      if (force === tile0.force) {
+        if (!this.canRemove(fromTile)) { return false }
+      }
 
       tile1.force += force
     }
@@ -285,6 +298,7 @@ export default class Game {
 
     const tile0 = this.getTile(fromTile)
     if (!tile0 || tile0.force < force) { return false }
+    if (tile0.base && force === tile0.force) { return false }
 
     const directionCoord = Game.Direction[direction]
     if (!directionCoord) { return false }
@@ -293,6 +307,9 @@ export default class Game {
     const tile1 = this.getTile(toTile)
 
     if (!tile1 || tile1.owner === tile0.owner) { return false }
+    if (tile1.force >= tile0.force && force === tile0.force && !this.canRemove(fromTile)) {
+      return false
+    }
 
     tile0.force -= Math.min(force, tile1.force)
     tile1.force -= force
@@ -311,6 +328,56 @@ export default class Game {
     return true
   }
 
+  private canRemove(coord: Coordinate) {
+    const tile = this.getTile(coord)
+    if (!tile) { return true }
+    if (tile.base) { return false }
+    const { owner } = tile
+
+    const board = this.board.map(row => row.slice())
+    const boardSize = board.length
+    coord[0] = mod(coord[0], boardSize)
+    coord[1] = mod(coord[1], boardSize)
+    board[coord[0]][coord[1]] = null
+
+    const base = this.bases[owner]
+    if (!base) { return false }
+
+    const connectedTiles: Record<string, boolean> = {}
+
+    const search = (coord: Coordinate) => {
+      coord = [mod(coord[0], boardSize), mod(coord[1], boardSize)]
+
+      if (connectedTiles[coord.join()] !== undefined) { return }
+
+      const tile = board[coord[0]][coord[1]]
+      if (tile && tile.owner === owner) {
+        connectedTiles[coord.join()] = true;
+
+        directions.forEach(direction => {
+          search(add(coord, Game.Direction[direction]))
+        })
+      } else {
+        connectedTiles[coord.join()] = false
+      }
+    }
+    search(base)
+    console.log(connectedTiles)
+
+    for (let r = 0; r < boardSize; r++) {
+      const row = board[r]
+      for (let c = 0; c < boardSize; c++) {
+        const tile = row[c]
+        const key = [r, c].join()
+        if (tile && tile.owner === owner && !connectedTiles[key]) {
+          return false
+        }
+      }
+    }
+
+    return true
+  }
+
   /**
    * @param { number } playerIndex
    */
@@ -318,7 +385,7 @@ export default class Game {
     const boardSize = this.board.length
 
     const base = this.bases[playerIndex]
-    if (!base || !this.getTile(base)) { return }
+    if (!base) { return }
 
     /** @type { Record<string, boolean> } */
     const connectedTiles: Record<string, boolean> = {}
@@ -335,7 +402,7 @@ export default class Game {
       if (tile && tile.owner === playerIndex) {
         connectedTiles[coord.join()] = true;
 
-        ["up", "down", "left", "right"].forEach(direction => {
+        directions.forEach(direction => {
           search(add(coord, Game.Direction[direction]))
         })
       } else {
@@ -434,6 +501,8 @@ export default class Game {
     right: [0, 1]
   }
 }
+
+const directions: ["up", "down", "left", "right"] = ["up", "down", "left", "right"]
 
 const variationIndices: Record<string, string> = {}
 Game.variations.forEach((variation, i) => variationIndices[variation] = i.toString())

@@ -1,5 +1,25 @@
 body {
   background-color: black;
+  color: white;
+}
+
+.center-aligned {
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+}
+
+.border {
+  border-style: solid;
+  border-width: 2px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  #alliance-box {
+    transition: all 0.5s ease-in-out;
+  }
 }
 
 #canvas {

@@ -35,6 +35,14 @@ export class Game {
     const { players } = this
 
     const rand = mulberry32(parseInt(this.id.substr(0, 6), 36))
+    const playerIndices = Array.from({ length: players }, (_, i) => i)
+    for (let i = 0; i < players; i++) {
+      const swapIndex = playerIndices[Math.floor(rand() * players)]
+
+      const tempVal = playerIndices[i]
+      playerIndices[i] = playerIndices[swapIndex]
+      playerIndices[swapIndex] = tempVal
+    }
 
     const tiles = []
     const boardSize = Math.ceil(4 * Math.sqrt(players))
@@ -85,6 +93,7 @@ export class Game {
    */
   getTile(rowOrCoord, col) {
     const boardSize = this.board.length
+    if (!boardSize) { return null }
 
     if (typeof rowOrCoord === "number") {
       if (typeof col !== "number") { return null }
@@ -108,6 +117,7 @@ export class Game {
    */
   setTile(rowOrCoord, colOrValue, value) {
     const boardSize = this.board.length
+    if (!boardSize) { return null }
 
     if (typeof rowOrCoord === "number") {
       if (typeof colOrValue !== "number") { return }
@@ -140,6 +150,7 @@ export class Game {
 
     const tile0 = this.getTile(fromTile)
     if (!tile0 || tile0.force < force) { return false }
+    if (tile0.base && force === tile0.force) { return false }
 
     const directionCoord = Game.Direction[direction]
     if (!directionCoord) { return false }
@@ -155,7 +166,9 @@ export class Game {
         force
       })
     } else {
-      if (tile0.owner !== tile1.owner && force === tile0.force) { return false }
+      if (force === tile0.force) {
+        if (!this._canRemove(fromTile)) { return false }
+      }
 
       tile1.force += force
     }
@@ -181,6 +194,7 @@ export class Game {
 
     const tile0 = this.getTile(fromTile)
     if (!tile0 || tile0.force < force) { return false }
+    if (tile0.base && force === tile0.force) { return false }
 
     const directionCoord = Game.Direction[direction]
     if (!directionCoord) { return false }
@@ -188,7 +202,8 @@ export class Game {
     const toTile = add(fromTile, directionCoord)
     const tile1 = this.getTile(toTile)
 
-    if (!tile1 || tile1.owner === tile0.owner) {
+    if (!tile1 || tile1.owner === tile0.owner) { return false }
+    if (tile1.force >= tile0.force && force === tile0.force && !this._canRemove(fromTile)) {
       return false
     }
 
@@ -211,13 +226,71 @@ export class Game {
   }
 
   /**
+   * @private
+   * @param { Coordinate } coord 
+   */
+  _canRemove(coord) {
+    const tile = this.getTile(coord)
+    if (!tile) { return true }
+    if (tile.base) { return false }
+    const { owner } = tile
+
+    const board = this.board.map(row => row.slice())
+    const boardSize = board.length
+    coord[0] = mod(coord[0], boardSize)
+    coord[1] = mod(coord[1], boardSize)
+    board[coord[0]][coord[1]] = null
+
+    const base = this.bases[owner]
+    if (!base) { return false }
+
+    /** @type { Record<string, boolean> } */
+    const connectedTiles = {}
+
+    /**
+     * @param { Coordinate } coord 
+     */
+    const search = (coord) => {
+      coord = [mod(coord[0], boardSize), mod(coord[1], boardSize)]
+
+      if (connectedTiles[coord.join()] !== undefined) { return }
+
+      const tile = board[coord[0]][coord[1]]
+      if (tile && tile.owner === owner) {
+        connectedTiles[coord.join()] = true;
+
+        directions.forEach(direction => {
+          search(add(coord, Game.Direction[direction]))
+        })
+      } else {
+        connectedTiles[coord.join()] = false
+      }
+    }
+    search(base)
+
+    for (let r = 0; r < boardSize; r++) {
+      const row = board[r]
+      for (let c = 0; c < boardSize; c++) {
+        const tile = row[c]
+        const key = [r, c].join()
+        if (tile && tile.owner === owner && !connectedTiles[key]) {
+          return false
+        }
+      }
+    }
+
+    return true
+  }
+
+  /**
+   * @private
    * @param { number } playerIndex
    */
   _purgeDisconnectedTiles(playerIndex) {
     const boardSize = this.board.length
 
     const base = this.bases[playerIndex]
-    if (!base || !this.getTile(base)) { return }
+    if (!base) { return }
 
     /** @type { Record<string, boolean> } */
     const connectedTiles = {}
@@ -234,7 +307,7 @@ export class Game {
       if (tile && tile.owner === playerIndex) {
         connectedTiles[coord.join()] = true;
 
-        ["up", "down", "left", "right"].forEach(direction => {
+        directions.forEach(direction => {
           search(add(coord, Game.Direction[direction]))
         })
       } else {
@@ -243,7 +316,6 @@ export class Game {
     }
     search(base)
 
-    
     for (let r = 0; r < boardSize; r++) {
       const row = this.board[r]
       for (let c = 0; c < boardSize; c++) {
@@ -269,14 +341,15 @@ export class Game {
     this._setBases()
     this._triggerUpdateCallbacks()
   }
+  /** @private */
   _triggerUpdateCallbacks() {
     this._updateCallbacks.forEach(cb => cb(this))
   }
 
+  /** @private */
   _setBases() {
     const boardSize = this.board.length
 
-    /** @type { Coordinate[] } */
     this.bases = Array(this.players)
 
     for (let r = 0; r < boardSize; r++) {
@@ -296,6 +369,9 @@ export class Game {
    */
   addUpdateListener(listener) {
     this._updateCallbacks.push(listener)
+  }
+  clearListeners() {
+    this._updateCallbacks = []
   }
 
   static parseBoardData(data) {
@@ -378,6 +454,9 @@ Game.Direction = {
   left: [0, -1],
   right: [0, 1]
 }
+
+/** @type { ["up", "down", "left", "right"] } */
+const directions = ["up", "down", "left", "right"]
 
 /**
  * @param { Coordinate } coord1

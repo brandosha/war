@@ -1,5 +1,6 @@
 {
   "env": { "browser": true, "es6": true },
+  "globals": { "Vue": "readonly" },
   "parserOptions": {
     "ecmaVersion": 2018,
     "sourceType": "module"

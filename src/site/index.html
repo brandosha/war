@@ -9,11 +9,78 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <!-- <div class="d-flex h-100 justify-content-center align-items-center">
-    
-  </div> -->
-  <canvas id="canvas" width="500" height="500"></canvas>
+  <div id="app">
+    <div v-if="players < 1" class="center-aligned">
+      <form @submit.prevent="joinGame" class="d-flex m-0">
+        <input v-model="gameId" class="form-control font-monospace" placeholder="Game ID" style="max-width: 8em;">
+        <button class="btn btn-secondary ms-3">
+          Join Game
+        </button>
+      </form>
+      <div class="my-2">
+        - or -
+      </div>
+      <button @click="createGame" class="btn btn-secondary">
+        Start a New Game
+      </button>
+    </div>
+    <div v-else-if="!showCanvas" class="center-aligned">
+      <h3>
+        You're in
+      </h3>
+      <div>
+        {{ players }} {{ players === 1 ? "Player" : "Players" }}
+      </div>
+      <div class="mt-3">
+        Invite players with the ID <span class="font-monospace user-select-all">{{ gameId }}</span>
+      </div>
+      <div class="my-2">
+        - or -
+      </div>
+      <button @click="shareLink" class="btn btn-secondary">
+        Share Link
+      </button>
+      <div class="d-flex my-4">
+        <button @click="cancel" class="btn btn-danger">
+          Cancel
+        </button>
+        <button @click="startGame" class="btn btn-success ms-3" :disabled="players < 4">
+          Start Game
+        </button>
+      </div>
+    </div>
+    <div v-else-if="playerIndex >= 0" class="position-fixed top-0 d-flex p-3 justify-content-end w-100">
+      <div id="alliance-box" class="d-flex flex-column pt-2 pb-1 px-1 bg-secondary rounded overflow-hidden">
+        <h5 @click="showAllianceUi = !showAllianceUi" class="ms-2 mb-1">
+          Alliances
+        </h5>
+        <div class="d-flex flex-wrap">
+          <div v-for="i in players">
+            <div
+              v-if="(i - 1) !== playerIndex"
+              @click="allianceClicked(i - 1)"
+              class="border rounded m-1 p-2"
+              style="width: 3em; height: 3em"
+              :style="'background-color: hsl(' + ((i - 1) / players * 360 + 225) + ', 70%, 60%)'"
+              :class="allianceCursor === (i - 1) ? 'border-white' : 'border-secondary'"
+            >
+              <svg v-if="alliances[i - 1]" xmlns="http://www.w3.org/2000/svg" style="width: 2em; height: 2em" fill="black" class="bi bi-check-lg" viewBox="0 0 16 16">
+                <path d="M13.485 1.431a1.473 1.473 0 0 1 2.104 2.062l-7.84 9.801a1.473 1.473 0 0 1-2.12.04L.431 8.138a1.473 1.473 0 0 1 2.084-2.083l4.111 4.112 6.82-8.69a.486.486 0 0 1 .04-.045z"/>
+              </svg>
+              <svg v-else xmlns="http://www.w3.org/2000/svg" style="width: 2em; height: 2em" fill="black" class="bi bi-x-lg" viewBox="0 0 16 16">
+                <path d="M1.293 1.293a1 1 0 0 1 1.414 0L8 6.586l5.293-5.293a1 1 0 1 1 1.414 1.414L9.414 8l5.293 5.293a1 1 0 0 1-1.414 1.414L8 9.414l-5.293 5.293a1 1 0 0 1-1.414-1.414L6.586 8 1.293 2.707a1 1 0 0 1 0-1.414z"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <canvas id="canvas" style="display: none;"></canvas>
+  
 
+  <script src="https://unpkg.com/vue@3"></script>
   <script src="app.js" type="module"></script>
 </body>
 </html>
