@@ -116,8 +116,7 @@ class Server {
   }
 
   async subscribe(gameId) {
-    const gameInfo = await this.sendMessage("subscribe", { gameId })
-    console.log(gameInfo)
+    await this.sendMessage("subscribe", { gameId })
 
     this.game = new Game(gameId)
     return this.game

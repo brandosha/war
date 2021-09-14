@@ -1,6 +1,7 @@
 /** @typedef { import("./Game").Game } Game */
 import { server } from "./Server.js"
 import { mod } from "./utils.js"
+import { app } from "../app.js"
 
 export const ui = {
   boardOffsetX: 0,
@@ -8,8 +9,8 @@ export const ui = {
   /** @type { [number, number] | null } */
   cursor: null,
   mobilizingForce: 0,
-  /** @type { boolean[] } */
-  alliances: []
+  /** @type { Record<number, boolean> } */
+  alliances: {}
 }
 // @ts-ignore
 window.ui = ui
@@ -67,8 +68,6 @@ canvas.addEventListener("click", event => {
 
     const row = mod(Math.round(y / squareSize), boardSize)
     const col = mod(Math.round(x / squareSize), boardSize)
-
-    console.log({ x, y }, { row, col })
 
     const tile = game.getTile(row, col)
     if (tile && tile.owner === game.playerIndex) {
@@ -315,12 +314,14 @@ function addMobilizingForce(amount) {
 }
 
 document.addEventListener("keydown", e => {
-  const { key } = e
-  console.log(key)
+  app.showTouchControls = false
+  keyPressed(e.key)
+})
 
-  // @ts-ignore
-  const { app } = window
-
+/**
+ * @param { string } key 
+ */
+export function keyPressed(key) {
   if (key === "ArrowUp") {
     move("up")
   } else if (key === "ArrowDown") {
@@ -344,4 +345,4 @@ document.addEventListener("keydown", e => {
   } else if (key === "c") {
     app.moveAllianceCursor(1)
   }
-})
+}

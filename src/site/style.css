@@ -3,6 +3,13 @@ body {
   color: white;
 }
 
+* {
+  -moz-user-select: none;
+  -webkit-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
 .center-aligned {
   height: 100%;
   display: flex;
@@ -11,9 +18,37 @@ body {
   flex-direction: column;
 }
 
-.border {
-  border-style: solid;
-  border-width: 2px;
+#hud {
+  pointer-events: none;
+}
+#hud > div > * {
+  pointer-events: initial;
+}
+
+.square-2 {
+  width: 2rem;
+  height: 2rem;
+}
+
+.square-3 {
+  width: 3rem;
+  height: 3rem;
+}
+
+.square-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  /* font-family: monospace; */
+  font-size: 1.25rem;
+
+  width: 3rem;
+  height: 3rem;
+  background-color: #6c757d;
+
+  margin: 0.25em;
+  border-radius: 0.25rem;
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -22,7 +57,31 @@ body {
   }
 }
 
+#arrow-touch-controls {
+  display: grid;
+  grid-template-areas: ". u ."
+                       "l . r"
+                       ". d .";
+}
+#arrow-touch-controls > div:nth-child(1) {
+  grid-area: u;
+}
+#arrow-touch-controls > div:nth-child(2) {
+  grid-area: l;
+  rotate: -90deg;
+}
+#arrow-touch-controls > div:nth-child(3) {
+  grid-area: r;
+  rotate: 90deg;
+}
+#arrow-touch-controls > div:nth-child(4) {
+  grid-area: d;
+  rotate: 180deg;
+}
+
 #canvas {
   width: 100vw;
   height: 100vh;
 }
+
+[v-cloak] { display: none; }

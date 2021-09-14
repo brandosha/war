@@ -9,7 +9,7 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div id="app">
+  <div id="app" v-cloak>
     <div v-if="players < 1" class="center-aligned">
       <form @submit.prevent="joinGame" class="d-flex m-0">
         <input v-model="gameId" class="form-control font-monospace" placeholder="Game ID" style="max-width: 8em;">
@@ -49,27 +49,55 @@
         </button>
       </div>
     </div>
-    <div v-else-if="playerIndex >= 0" class="position-fixed top-0 d-flex p-3 justify-content-end w-100">
-      <div id="alliance-box" class="d-flex flex-column pt-2 pb-1 px-1 bg-secondary rounded overflow-hidden">
-        <h5 @click="showAllianceUi = !showAllianceUi" class="ms-2 mb-1">
-          Alliances
-        </h5>
-        <div class="d-flex flex-wrap">
-          <div v-for="i in players">
-            <div
-              v-if="(i - 1) !== playerIndex"
-              @click="allianceClicked(i - 1)"
-              class="border rounded m-1 p-2"
-              style="width: 3em; height: 3em"
-              :style="'background-color: hsl(' + ((i - 1) / players * 360 + 225) + ', 70%, 60%)'"
-              :class="allianceCursor === (i - 1) ? 'border-white' : 'border-secondary'"
-            >
-              <svg v-if="alliances[i - 1]" xmlns="http://www.w3.org/2000/svg" style="width: 2em; height: 2em" fill="black" class="bi bi-check-lg" viewBox="0 0 16 16">
-                <path d="M13.485 1.431a1.473 1.473 0 0 1 2.104 2.062l-7.84 9.801a1.473 1.473 0 0 1-2.12.04L.431 8.138a1.473 1.473 0 0 1 2.084-2.083l4.111 4.112 6.82-8.69a.486.486 0 0 1 .04-.045z"/>
-              </svg>
-              <svg v-else xmlns="http://www.w3.org/2000/svg" style="width: 2em; height: 2em" fill="black" class="bi bi-x-lg" viewBox="0 0 16 16">
-                <path d="M1.293 1.293a1 1 0 0 1 1.414 0L8 6.586l5.293-5.293a1 1 0 1 1 1.414 1.414L9.414 8l5.293 5.293a1 1 0 0 1-1.414 1.414L8 9.414l-5.293 5.293a1 1 0 0 1-1.414-1.414L6.586 8 1.293 2.707a1 1 0 0 1 0-1.414z"/>
-              </svg>
+    <div id="hud" v-else-if="playerIndex >= 0" class="d-flex flex-column position-fixed top-0 h-100 w-100 p-3">
+      <div class="d-flex justify-content-end">
+        <div id="alliance-box" class="d-flex flex-column pt-2 pb-1 px-1 bg-secondary rounded overflow-hidden">
+          <h5 @click="showAllianceUi = !showAllianceUi" class="ms-2 mb-1">
+            Alliances
+          </h5>
+          <div class="d-flex flex-wrap">
+            <div v-for="i in players">
+              <div
+                v-if="(i - 1) !== playerIndex"
+                @click="allianceClicked(i - 1)"
+                class="border rounded m-1 p-2"
+                :style="'background-color: hsl(' + ((i - 1) / players * 360 + 225) + ', 70%, 60%)'"
+                :class="allianceCursor === (i - 1) ? 'border-white' : 'border-secondary'"
+              >
+                <svg v-if="alliances[i - 1]" xmlns="http://www.w3.org/2000/svg" fill="black" class="bi bi-check-lg square-2" viewBox="0 0 16 16">
+                  <path d="M13.485 1.431a1.473 1.473 0 0 1 2.104 2.062l-7.84 9.801a1.473 1.473 0 0 1-2.12.04L.431 8.138a1.473 1.473 0 0 1 2.084-2.083l4.111 4.112 6.82-8.69a.486.486 0 0 1 .04-.045z"/>
+                </svg>
+                <svg v-else xmlns="http://www.w3.org/2000/svg" fill="black" class="bi bi-x-lg square-2" viewBox="0 0 16 16">
+                  <path d="M1.293 1.293a1 1 0 0 1 1.414 0L8 6.586l5.293-5.293a1 1 0 1 1 1.414 1.414L9.414 8l5.293 5.293a1 1 0 0 1-1.414 1.414L8 9.414l-5.293 5.293a1 1 0 0 1-1.414-1.414L6.586 8 1.293 2.707a1 1 0 0 1 0-1.414z"/>
+                </svg>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div v-if="showTouchControls" class="d-flex justify-content-between align-items-end mt-auto">
+        <div id="arrow-touch-controls">
+          <div v-for="direction in ['Up', 'Left', 'Right', 'Down']" @click="pressKey('Arrow' + direction)" class="rounded bg-secondary">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" class="bi bi-arrow-up-short square-3" viewBox="0 0 16 16">
+              <path fill-rule="evenodd" d="M8 12a.5.5 0 0 0 .5-.5V5.707l2.146 2.147a.5.5 0 0 0 .708-.708l-3-3a.5.5 0 0 0-.708 0l-3 3a.5.5 0 1 0 .708.708L7.5 5.707V11.5a.5.5 0 0 0 .5.5z"/>
+            </svg>
+          </div>
+        </div>
+        <div>
+          <div class="d-flex">
+            <div @click="pressKey('q')" class="square-button">
+              0
+            </div>
+            <div @click="pressKey('w')" class="square-button">
+              Max
+            </div>
+          </div>
+          <div class="d-flex">
+            <div @click="pressKey('a')" class="square-button">
+              -1
+            </div>
+            <div @click="pressKey('s')" class="square-button">
+              +1
             </div>
           </div>
         </div>

@@ -1,22 +1,27 @@
 /** @typedef { import("./scripts/Game").Game } Game */
-import { center, renderBoard, ui } from "./scripts/ui.js"
+import { center, keyPressed, renderBoard, ui } from "./scripts/ui.js"
 import { server } from "./scripts/Server.js"
 import { mod } from "./scripts/utils.js"
 
 const canvas = document.getElementById("canvas")
 
+/** @type { Record<string, string> } */
+const storedAlliances = JSON.parse(localStorage.getItem("alliances") || "{}")
+
 /** @type { Game | null } */
 let game = null
 
-const app = Vue.createApp({
+export const app = Vue.createApp({
   data() {
     return {
       gameId: location.hash.slice(1),
       players: 0,
       playerIndex: -1,
-      alliances: ui.alliances,
+      /** @type { Record<number, boolean> } */
+      alliances: {},
       allianceCursor: 0,
       showAllianceUi: true,
+      showTouchControls: true || window.matchMedia("(pointer: coarse)").matches,
 
       begun: false,
       showCanvas: false
@@ -62,26 +67,37 @@ const app = Vue.createApp({
      * @param { number } d 
      */
     moveAllianceCursor(d) {
-      this.allianceCursor = mod(this.allianceCursor + d, this.players)
-      if (this.allianceCursor === this.playerIndex) {
-        const sign = Math.sign(d) || 1
-        this.allianceCursor = mod(this.allianceCursor + sign, this.players)
+      if (!this.showAllianceUi) {
+        this.showAllianceUi = true
+      } else {
+        this.allianceCursor = mod(this.allianceCursor + d, this.players)
+        if (this.allianceCursor === this.playerIndex) {
+          const sign = Math.sign(d) || 1
+          this.allianceCursor = mod(this.allianceCursor + sign, this.players)
+        }
       }
     },
     toggleAlliance() {
-      ui.alliances[this.allianceCursor] = !ui.alliances[this.allianceCursor]
-      this.$forceUpdate()
+      if (!this.showAllianceUi) {
+        this.showAllianceUi = true
+      } else {
+        ui.alliances[this.allianceCursor] = !ui.alliances[this.allianceCursor]
+        this.$forceUpdate()
+      }
     },
     /**
      * @param { number } i
      */
     allianceClicked(i) {
-      const diff = i - this.allianceCursor
-      console.log(i, this.allianceCursor, diff)
-      this.moveAllianceCursor(diff)
-      console.log(this.allianceCursor)
+      this.moveAllianceCursor(i - this.allianceCursor)
       this.toggleAlliance()
       this.$forceUpdate()
+    },
+    /**
+     * @param { string } key 
+     */
+    pressKey(key) {
+      keyPressed(key)
     }
   },
   watch: {
@@ -103,22 +119,23 @@ const app = Vue.createApp({
         box.style.height = "2.5em"
       }
     },
-    alliances() {
-      const storedAlliances = JSON.parse(localStorage.getItem("alliances") || "{}")
+    alliances: {
+      handler() {
+        let allianceStr = ""
+        for (let i = 0; i < this.players; i++) {
+          allianceStr += ui.alliances[i] ? "1" : "0"
+        }
 
-      const allianceArr = Array(this.players)
-      for (let i = 0; i < this.players; i++) {
-        allianceArr[i] = ui.alliances[i] ? "1" : "0"
-      }
-
-      storedAlliances[this.gameId] = allianceArr.join("")
-      localStorage.setItem("alliances", JSON.stringify(storedAlliances))
+        storedAlliances[this.gameId] = allianceStr
+        localStorage.setItem("alliances", JSON.stringify(storedAlliances))
+      },
+      deep: true
     }
   }
 }).mount("#app")
 
 // @ts-ignore
-window.app = app
+window.app = app; ui.alliances = app.alliances
 
 /**
  * 
@@ -126,6 +143,7 @@ window.app = app
  */
 function listenToGame(game) {
   let firstRender = true
+
   game.addUpdateListener(() => {
     app.players = game.players
 
@@ -139,6 +157,13 @@ function listenToGame(game) {
       app.$nextTick(() => {
         if (firstRender) {
           firstRender = false
+
+          const alliances = storedAlliances[game.id]
+          if (alliances) {
+            for (let i = 0; i < alliances.length; i++) {
+              ui.alliances[i] = alliances[i] === "1"
+            }
+          }
     
           const myBase = game.bases[game.playerIndex]
           if (myBase) {
