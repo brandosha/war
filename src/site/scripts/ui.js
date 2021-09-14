@@ -30,7 +30,22 @@ canvas.addEventListener("mousedown", () => {
     y: 0
   }
 })
-document.addEventListener("mousemove", event => {
+
+let touchPos = { x: 0, y: 0 }
+canvas.addEventListener("touchstart", () => {
+  mouseDown = true
+  displacement = {
+    x: 0,
+    y: 0
+  }
+
+  touchPos = { x: 0, y: 0 }
+})
+
+/**
+ * @param { { movementX: number, movementY: number } } event 
+ */
+function mousemoved(event) {
   if (mouseDown && server.game) {
     displacement.x += Math.abs(event.movementX)
     displacement.y += Math.abs(event.movementY)
@@ -43,6 +58,20 @@ document.addEventListener("mousemove", event => {
       renderBoard()
     }
   }
+}
+document.addEventListener("mousemove", mousemoved)
+document.addEventListener("touchmove", event => {
+  const touch = event.touches[0]
+
+  if (touchPos.x !== 0 || touchPos.y !== 0) {
+    mousemoved({
+      movementX: touch.clientX - touchPos.x,
+      movementY: touch.clientY - touchPos.y,
+    })
+  }
+
+  touchPos.x = touch.clientX
+  touchPos.y = touch.clientY
 })
 document.addEventListener("mouseup", () => {
   mouseDown = false
