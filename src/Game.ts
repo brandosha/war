@@ -226,9 +226,11 @@ export default class Game {
   }
 
   async save(): Promise<void> {
-    if (this.hasBegun) {
-      await db.set(this.id, this.saveData())
-    }
+    // Disable database integration for now
+
+    // if (this.hasBegun) {
+    //   await db.set(this.id, this.saveData())
+    // }
   }
 
   async begin(): Promise<void> {
@@ -462,6 +464,8 @@ export default class Game {
   addUpdateListener(callback: (update: GameUpdate) => void) {
     this.updateCallbacks.push(callback)
     callback(this.getUpdate())
+
+    this.scheduleForceDistribution()
   }
   removeUpdateListener(callback: (update: GameUpdate) => void) {
     for (let i = 0; i < this.updateCallbacks.length; i++) {
@@ -470,6 +474,11 @@ export default class Game {
         this.updateCallbacks.splice(i, 1)
         break
       }
+    }
+
+    if (this.updateCallbacks.length <= 0) {
+      this.haltForceDistribution?.()
+      Game.cache[this.id] = undefined
     }
   }
 
