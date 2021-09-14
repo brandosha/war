@@ -120,8 +120,9 @@ export default class Game {
     const boardSize = this.board.length
 
     for (let r = 0; r < boardSize; r++) {
+      const row = this.board[r]
       for (let c = 0; c < boardSize; c++) {
-        const tile = this.board[r][c]
+        const tile = row[c]
         if (!tile) {
           tileArr.push("")
           continue
@@ -170,6 +171,39 @@ export default class Game {
     return tiles
   }
 
+  haltForceDistribution?: () => void
+  scheduleForceDistribution() {
+    if (!this.hasBegun || this.haltForceDistribution) { return }
+
+    const boardSize = this.board.length
+
+    let timeoutHandle: ReturnType<typeof setTimeout>
+    const scheduleNext = () => {
+      const delay = (Math.random() * 15 + 30) * 1000
+
+      timeoutHandle = setTimeout(() => {
+        for (let r = 0; r < boardSize; r++) {
+          const row = this.board[r]
+          for (let c = 0; c < boardSize; c++) {
+            const tile = row[c]
+            
+            if (tile) {
+              tile.force += Math.floor(Math.sqrt(tile.force))
+            }
+          }
+        }
+
+        this.triggerUpdate()
+        scheduleNext()
+      }, delay)
+    }
+    scheduleNext()
+    
+    this.haltForceDistribution = () => {
+      clearTimeout(timeoutHandle)
+    }
+  }
+
   hasBegun: boolean | null = null
   async load(): Promise<boolean> {
     if (this.hasBegun == null) {
@@ -180,9 +214,9 @@ export default class Game {
         this.variation = game.variation
         this.players = game.players
         this.board = game.board
-        
 
         this.hasBegun = true
+        this.scheduleForceDistribution()
       } else {
         this.hasBegun = false
       }
@@ -200,6 +234,7 @@ export default class Game {
   async begin(): Promise<void> {
     this.board = this.initialBoard()
     this.hasBegun = true
+    this.scheduleForceDistribution()
     this.save()
 
     this.triggerUpdate()
@@ -446,6 +481,7 @@ export default class Game {
     }
   }
   private triggerUpdate() {
+    this.save()
     this.setBases()
 
     const update = this.getUpdate()
@@ -458,6 +494,7 @@ export default class Game {
     const boardSize = this.board.length
     this.bases = Array(this.players.length)
 
+    let basesCount = 0
     for (let r = 0; r < boardSize; r++) {
       const row = this.board[r]
       for (let c = 0; c < boardSize; c++) {
@@ -465,8 +502,13 @@ export default class Game {
         
         if (tile && tile.base) {
           this.bases[tile.owner] = [r, c]
+          basesCount += 1
         }
       }
+    }
+
+    if (basesCount <= 1) {
+      this.haltForceDistribution?.()
     }
   }
 

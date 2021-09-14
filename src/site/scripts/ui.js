@@ -314,6 +314,8 @@ function addMobilizingForce(amount) {
 }
 
 document.addEventListener("keydown", e => {
+  if (!server.game || server.game.board.length <= 0) { return }
+
   app.showTouchControls = false
   keyPressed(e.key)
 })
