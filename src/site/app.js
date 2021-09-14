@@ -30,6 +30,7 @@ export const app = Vue.createApp({
   methods: {
     async joinGame() {
       try {
+        this.gameId = this.gameId.toLowerCase()
         game = await server.joinGame(this.gameId)
         listenToGame(game)
 
