@@ -187,8 +187,8 @@ export default class Game {
           for (let c = 0; c < boardSize; c++) {
             const tile = row[c]
             
-            if (tile) {
-              tile.force += Math.floor(Math.sqrt(tile.force))
+            if (tile && tile.force > 0) {
+              tile.force += 1
             }
           }
         }

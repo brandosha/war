@@ -49,7 +49,7 @@
         </button>
       </div>
     </div>
-    <div id="hud" v-else-if="playerIndex >= 0" class="d-flex flex-column position-fixed top-0 h-100 w-100 p-3">
+    <div id="hud" v-else-if="playing" class="d-flex flex-column position-fixed top-0 h-100 w-100 p-3">
       <div class="d-flex justify-content-end">
         <div id="alliance-box" class="d-flex flex-column pt-2 pb-1 px-1 bg-secondary rounded overflow-hidden">
           <h5 @click="showAllianceUi = !showAllianceUi" class="ms-2 mb-1">

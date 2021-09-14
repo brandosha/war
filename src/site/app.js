@@ -132,6 +132,11 @@ export const app = Vue.createApp({
       },
       deep: true
     }
+  },
+  computed: {
+    playing() {
+      return game && !!game.bases[game.playerIndex]
+    }
   }
 }).mount("#app")
 
