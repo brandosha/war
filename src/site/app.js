@@ -22,6 +22,7 @@ export const app = Vue.createApp({
       allianceCursor: 0,
       showAllianceUi: true,
       showTouchControls: true || window.matchMedia("(pointer: coarse)").matches,
+      showInstruction: false,
 
       begun: false,
       showCanvas: false
@@ -37,6 +38,7 @@ export const app = Vue.createApp({
         this.playerIndex = game.playerIndex
         location.hash = game.id
       } catch (err) {
+        location.hash = ""
         this.gameId = ""
         console.error(err)
       }
@@ -99,6 +101,24 @@ export const app = Vue.createApp({
      */
     pressKey(key) {
       keyPressed(key)
+    },
+    /**
+     * @param { "up" | "down" | "left" | "right" } direction 
+     */
+    arrowPath(direction) {
+      // @ts-ignore
+      direction = direction.toLowerCase()
+      console.log("arrow", direction)
+
+      if (direction === "up") {
+        return "m7.247 4.86-4.796 5.481c-.566.647-.106 1.659.753 1.659h9.592a1 1 0 0 0 .753-1.659l-4.796-5.48a1 1 0 0 0-1.506 0z"
+      } else if (direction === "down") {
+        return "M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z"
+      } else if (direction === "left") {
+        return "m3.86 8.753 5.482 4.796c.646.566 1.658.106 1.658-.753V3.204a1 1 0 0 0-1.659-.753l-5.48 4.796a1 1 0 0 0 0 1.506z"
+      } else if (direction === "right") {
+        return "m12.14 8.753-5.482 4.796c-.646.566-1.658.106-1.658-.753V3.204a1 1 0 0 1 1.659-.753l5.48 4.796a1 1 0 0 1 0 1.506z"
+      }
     }
   },
   watch: {

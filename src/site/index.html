@@ -23,6 +23,9 @@
       <button @click="createGame" class="btn btn-secondary">
         Start a New Game
       </button>
+      <button @click="showInstruction = true" class="btn btn-dark" style="margin-top: 3em;">
+        How to Play
+      </button>
     </div>
     <div v-else-if="!showCanvas" class="center-aligned">
       <h3>
@@ -50,11 +53,18 @@
       </div>
     </div>
     <div id="hud" v-else-if="playing" class="d-flex flex-column position-fixed top-0 h-100 w-100 p-3">
-      <div class="d-flex justify-content-end">
+      <div class="d-flex justify-content-between">
+        <div>
+          <button @click="showInstruction = true" class="btn btn-dark rounded-circle p-2">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-question-lg" viewBox="0 0 16 16">
+              <path d="M3 4.075a.423.423 0 0 0 .43.44H4.9c.247 0 .442-.2.475-.445.159-1.17.962-2.022 2.393-2.022 1.222 0 2.342.611 2.342 2.082 0 1.132-.668 1.652-1.72 2.444-1.2.872-2.15 1.89-2.082 3.542l.005.386c.003.244.202.44.446.44h1.445c.247 0 .446-.2.446-.446v-.188c0-1.278.487-1.652 1.8-2.647 1.086-.826 2.217-1.743 2.217-3.667C12.667 1.301 10.393 0 7.903 0 5.645 0 3.17 1.053 3.001 4.075zm2.776 10.273c0 .95.758 1.652 1.8 1.652 1.085 0 1.832-.702 1.832-1.652 0-.985-.747-1.675-1.833-1.675-1.04 0-1.799.69-1.799 1.675z"/>
+            </svg>
+          </button>
+        </div>
         <div id="alliance-box" class="d-flex flex-column pt-2 pb-1 px-1 bg-secondary rounded overflow-hidden">
-          <h5 @click="showAllianceUi = !showAllianceUi" class="ms-2 mb-1">
+          <h4 @click="showAllianceUi = !showAllianceUi" class="ms-2 mb-1">
             Alliances
-          </h5>
+          </h4>
           <div class="d-flex flex-wrap">
             <div v-for="i in players">
               <div
@@ -78,8 +88,8 @@
       <div v-if="showTouchControls" class="d-flex justify-content-between align-items-end mt-auto">
         <div id="arrow-touch-controls">
           <div v-for="direction in ['Up', 'Left', 'Right', 'Down']" @click="pressKey('Arrow' + direction)" class="rounded bg-secondary">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" class="bi bi-arrow-up-short square-3" viewBox="0 0 16 16">
-              <path fill-rule="evenodd" d="M8 12a.5.5 0 0 0 .5-.5V5.707l2.146 2.147a.5.5 0 0 0 .708-.708l-3-3a.5.5 0 0 0-.708 0l-3 3a.5.5 0 1 0 .708.708L7.5 5.707V11.5a.5.5 0 0 0 .5.5z"/>
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-up-short square-3" viewBox="0 0 16 16">
+              <path d="m7.247 4.86-4.796 5.481c-.566.647-.106 1.659.753 1.659h9.592a1 1 0 0 0 .753-1.659l-4.796-5.48a1 1 0 0 0-1.506 0z"/>
             </svg>
           </div>
         </div>
@@ -101,6 +111,107 @@
             </div>
           </div>
         </div>
+      </div>
+    </div>
+
+    <div v-show="showInstruction" class="bg-black position-fixed top-0 w-100 h-100 overflow-auto" style="z-index: 100;" id="instruction">
+      <h2>
+        How To Play
+      </h2>
+
+      <div class="border border-secondary rounded p-3">
+        <h3>
+          Rules
+        </h3>
+        <hr class="m-0">
+
+        <h5>
+          Objective
+        </h5>
+        <p>
+          The objective of the game is to be the last man standing.
+          Each player has a base as well as occupied spaces.
+          Once a players base is destroyed, they are out of the game.
+        </p>
+
+        <h5>
+          The Game Board
+        </h5>
+        <p>
+          The game board is an infinitely repeating square.
+          If a piece moves off the edge of the board, it is placed at the opposite end of the board.
+        </p>
+        <p>
+          To start the game each player has a base with 10 points of material.
+          Players move pieces to occupy neighboring squares.
+          Occupied spaces must have a path to their respective base.
+        </p>
+
+        <h5>
+          Moving and Attacking
+        </h5>
+        <p>
+          A player may move their peices at any time.
+          A player may move any amount of their peices to an adjacent square if it is unoccupied or is already occupied by them.
+          The cursor displays the amount of pieces being moved.
+        </p>
+        <p>
+          If the player moves onto a square occupied by an opponent, they attack.
+          Each point used in the attack destroys a point on the contested square.
+          If all points on the contested square are destroyed it will become unoccupied.
+        </p>
+
+        <h5>
+          Alliances
+        </h5>
+        <p>
+          If the player moves onto a square occupied by an ally they render aid.
+          Rather than attacking, points are simply transferred between players.
+        </p>
+
+        <h5>
+          Recieving Points
+        </h5>
+        <p>
+          Every 30-45 seconds each occupied square recieves one additional point.
+        </p>
+
+        <h3>
+          Controls
+        </h3>
+        <hr class="m-0">
+
+        <h5>
+          Keyboard
+        </h5>
+        <p>
+          <kbd v-for="direction in ['up', 'down', 'left', 'right']" class="d-inline-block">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-up-short" viewBox="0 0 16 16">
+              <path :d="arrowPath(direction)"/>
+            </svg>
+          </kbd> to move and attack.
+        </p>
+        <p class="mt-4">
+          <kbd>A</kbd> and <kbd>S</kbd> to add or subtract 1 from the points being moved.
+        </p>
+        <p>
+          <kbd>Q</kbd> to move no points
+        </p>
+        <p>
+          <kbd>W</kbd> to move all points
+        </p>
+        <p class="mt-4">
+          <kbd>Z</kbd> and <kbd>C</kbd> to move alliance cursor left or right
+        </p>
+        <p>
+          <kbd>X</kbd> to toggle alliance
+        </p>
+      </div>
+
+      <div class="position-fixed top-0 end-0">
+        <button @click="showInstruction = false" class="btn btn-close-white btn-lg m-3">
+          &times;
+        </button>
       </div>
     </div>
   </div>
