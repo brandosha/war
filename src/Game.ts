@@ -201,6 +201,7 @@ export default class Game {
     
     this.haltForceDistribution = () => {
       clearTimeout(timeoutHandle)
+      this.haltForceDistribution = undefined
     }
   }
 
@@ -327,7 +328,7 @@ export default class Game {
     return true
   }
 
-  attack(force: number, fromTile: Coordinate, direction: string) {
+  invade(force: number, fromTile: Coordinate, direction: string) {
     if (!this.board.length) { return false }
 
     force = Math.floor(force)
@@ -344,19 +345,32 @@ export default class Game {
     const tile1 = this.getTile(toTile)
 
     if (!tile1 || tile1.owner === tile0.owner) { return false }
-    if (tile1.force >= tile0.force && force === tile0.force && !this.canRemove(fromTile)) {
+
+    const remainingForce = force - tile1.force
+    if (remainingForce > 0) {
+      // Temporary for the `canRemove`
+      this.setTile(toTile, {
+        owner: tile0.owner,
+        force: remainingForce
+      })
+    }
+    
+    if (force === tile0.force && !this.canRemove(fromTile)) {
+      this.setTile(toTile, tile1)
       return false
     }
 
-    tile0.force -= Math.min(force, tile1.force)
+    tile0.force -= force
     tile1.force -= force
     
     if (tile0.force <= 0) {
       this.setTile(fromTile, null)
-      this.purgeDisconnectedTiles(tile0.owner)
+      // this.purgeDisconnectedTiles(tile0.owner)
     }
     if (tile1.force <= 0) {
-      this.setTile(toTile, null)
+      if (tile1.force === 0) {
+        this.setTile(toTile, null)
+      }
       this.purgeDisconnectedTiles(tile1.owner)
     }
 

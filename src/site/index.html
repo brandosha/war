@@ -89,7 +89,7 @@
         <div id="arrow-touch-controls">
           <div v-for="direction in ['Up', 'Left', 'Right', 'Down']" @click="pressKey('Arrow' + direction)" class="rounded bg-secondary">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-up-short square-3" viewBox="0 0 16 16">
-              <path d="m7.247 4.86-4.796 5.481c-.566.647-.106 1.659.753 1.659h9.592a1 1 0 0 0 .753-1.659l-4.796-5.48a1 1 0 0 0-1.506 0z"/>
+              <path fill-rule="evenodd" d="M8 12a.5.5 0 0 0 .5-.5V5.707l2.146 2.147a.5.5 0 0 0 .708-.708l-3-3a.5.5 0 0 0-.708 0l-3 3a.5.5 0 1 0 .708.708L7.5 5.707V11.5a.5.5 0 0 0 .5.5z"/>
             </svg>
           </div>
         </div>
@@ -148,17 +148,19 @@
         </p>
 
         <h5>
-          Moving and Attacking
+          Moving and Invasions
         </h5>
         <p>
           A player may move their peices at any time.
           A player may move any amount of their peices to an adjacent square if it is unoccupied or is already occupied by them.
+          Players may not move their pieces in a way that disconnects any occupied square from their base.
           The cursor displays the amount of pieces being moved.
         </p>
         <p>
-          If the player moves onto a square occupied by an opponent, they attack.
-          Each point used in the attack destroys a point on the contested square.
-          If all points on the contested square are destroyed it will become unoccupied.
+          If the player moves onto a square occupied by an opponent, they invade.
+          Each point used in the invasion destroys a point on the contested square.
+          Any remaining points used in the invasion will occupy the contested square.
+          If the invasion is sucessful and cuts off any occupied squares from their base, those squares will also be destroyed.
         </p>
 
         <h5>
@@ -166,7 +168,7 @@
         </h5>
         <p>
           If the player moves onto a square occupied by an ally they render aid.
-          Rather than attacking, points are simply transferred between players.
+          Rather than invading, points are simply transferred between players.
         </p>
 
         <h5>
@@ -189,7 +191,7 @@
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-up-short" viewBox="0 0 16 16">
               <path :d="arrowPath(direction)"/>
             </svg>
-          </kbd> to move and attack.
+          </kbd> to move and invade.
         </p>
         <p class="mt-4">
           <kbd>A</kbd> and <kbd>S</kbd> to add or subtract 1 from the points being moved.

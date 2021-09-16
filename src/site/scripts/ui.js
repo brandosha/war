@@ -282,41 +282,41 @@ function move(direction) {
 
   const force = Math.min(ui.mobilizingForce, tile0.force)
   
-  const tile1 = game.getTile(coord)
+  let tile1 = game.getTile(coord)
+  let moveSuccessful = false
   if (force <= 0) {
     if (tile1 && tile1.owner === game.playerIndex) {
-      ui.cursor = coord
+      moveSuccessful = true
     }
   } else if (!tile1 || tile1.owner === game.playerIndex) {
     if(game.mobilize(force, ui.cursor, direction)) {
-      ui.cursor = coord
+      moveSuccessful = true
       ui.mobilizingForce = force
-    } else {
-      if (game.mobilize(force - 1, ui.cursor, direction)) {
-        ui.cursor = coord
-        ui.mobilizingForce = force - 1
-      } else if (tile1 && tile1.owner === game.playerIndex) {
-        ui.cursor = coord
-      }
+    } else if (game.mobilize(force - 1, ui.cursor, direction)) {
+      moveSuccessful = true
+      ui.mobilizingForce = force - 1
+    } else if (tile1 && tile1.owner === game.playerIndex) {
+      moveSuccessful = true
     }
   } else if (ui.alliances[tile1.owner]) {
-    if(game.mobilize(force, ui.cursor, direction)) {
-      if (force === tile0.force) {
-        ui.cursor = base
-        addMobilizingForce(Infinity)
-      }
-    } else {
-      if (game.mobilize(tile0.force - 1, ui.cursor, direction)) {
-        if (force === tile0.force) {
-          ui.cursor = base
-          addMobilizingForce(Infinity)
-        }
-      }
+    moveSuccessful = game.mobilize(force, ui.cursor, direction)
+    if(!moveSuccessful) {
+      moveSuccessful = game.mobilize(tile0.force - 1, ui.cursor, direction)
     }
   } else {
-    const successful = game.attack(Math.min(force, tile0.force), ui.cursor, direction)
-    if (successful && force === tile0.force) {
+    moveSuccessful = game.invade(force, ui.cursor, direction)
+    if(!moveSuccessful) {
+      moveSuccessful = game.invade(tile0.force - 1, ui.cursor, direction)
+    }
+  }
+
+  tile1 = game.getTile(coord)
+  if (moveSuccessful) {
+    if (tile1 && tile1.owner === game.playerIndex) {
+      ui.cursor = coord
+    } else {
       ui.cursor = base
+      addMobilizingForce(Infinity)
     }
   }
 

@@ -186,7 +186,7 @@ export class Game {
    * @param { Coordinate } fromTile 
    * @param { Direction } direction 
    */
-  attack(force, fromTile, direction) {
+  invade(force, fromTile, direction) {
     if (!this.board.length) { return false }
 
     force = Math.floor(force)
@@ -203,24 +203,37 @@ export class Game {
     const tile1 = this.getTile(toTile)
 
     if (!tile1 || tile1.owner === tile0.owner) { return false }
-    if (tile1.force >= tile0.force && force === tile0.force && !this._canRemove(fromTile)) {
+
+    const remainingForce = force - tile1.force
+    if (remainingForce > 0) {
+      // Temporary for the `canRemove`
+      this.setTile(toTile, {
+        owner: tile0.owner,
+        force: remainingForce
+      })
+    }
+    
+    if (force === tile0.force && !this._canRemove(fromTile)) {
+      this.setTile(toTile, tile1)
       return false
     }
 
-    tile0.force -= Math.min(force, tile1.force)
+    tile0.force -= force
     tile1.force -= force
     
     if (tile0.force <= 0) {
       this.setTile(fromTile, null)
-      this._purgeDisconnectedTiles(tile0.owner)
+      // this.purgeDisconnectedTiles(tile0.owner)
     }
     if (tile1.force <= 0) {
-      this.setTile(toTile, null)
+      if (tile1.force === 0) {
+        this.setTile(toTile, null)
+      }
       this._purgeDisconnectedTiles(tile1.owner)
     }
 
     this._triggerUpdateCallbacks()
-    server.sendMessage("attack", { gameId: this.id, force, fromTile, direction })
+    server.sendMessage("invade", { gameId: this.id, force, fromTile, direction })
 
     return true
   }

@@ -8,7 +8,7 @@ interface Options {
   direction: string
 }
 
-const attack: APIFunction = async function(options: Options, clientInfo, send) {
+const invade: APIFunction = async function(options: Options, clientInfo, send) {
   const { playerId } = clientInfo
   if (!playerId) {
     send({ error: "Missing player id" }, true)
@@ -37,7 +37,7 @@ const attack: APIFunction = async function(options: Options, clientInfo, send) {
       return
     }
 
-    if (game.attack(force, fromTile, direction)) {
+    if (game.invade(force, fromTile, direction)) {
       send({ success: true }, true)
     } else {
       send({ error: "Invalid move [2]" }, true)
@@ -48,4 +48,4 @@ const attack: APIFunction = async function(options: Options, clientInfo, send) {
   }
 }
 
-export default attack
+export default invade
