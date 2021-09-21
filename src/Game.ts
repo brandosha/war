@@ -415,7 +415,6 @@ export default class Game {
       }
     }
     search(base)
-    console.log(connectedTiles)
 
     for (let r = 0; r < boardSize; r++) {
       const row = board[r]
@@ -499,7 +498,7 @@ export default class Game {
         if (this.updateCallbacks.length <= 0) {
           Game.cache[this.id] = undefined
         }
-      }, 5000)
+      }, 30_000)
     }
   }
 

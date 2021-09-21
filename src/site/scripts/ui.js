@@ -114,7 +114,7 @@ window.addEventListener("resize", () => {
 
 export function renderBoard() {
   if (canvas.style.display === "none") { return }
-  
+
   const { game } = server
   if (!game) { return }
 
@@ -187,7 +187,7 @@ export function renderBoard() {
   }
 
   // Draw cursor
-  if (!ui.cursor) { return }
+  if (!ui.cursor || !app.playing) { return }
 
   ctx.font = `${squareSize / 8}px sans-serif`
   ctx.strokeStyle = "#ddd"
