@@ -25,6 +25,7 @@ export const app = Vue.createApp({
       showInstruction: false,
 
       begun: false,
+      _playingUpdates: 0,
       showCanvas: false
     }
   },
@@ -62,6 +63,10 @@ export const app = Vue.createApp({
       location.hash = ""
       this.gameId = ""
       this.players = 0
+
+      this.showCanvas = false
+      server.game = undefined
+      server._ws.close()
     },
     startGame() {
       if (game) { game.begin() }
@@ -154,7 +159,9 @@ export const app = Vue.createApp({
   },
   computed: {
     playing() {
-      return game && !!game.bases[game.playerIndex]
+      this._playingUpdates;
+
+      return game && !game.isGameOver && !!game.bases[game.playerIndex]
     }
   }
 }).mount("#app")
@@ -177,6 +184,7 @@ function listenToGame(game) {
 
     if (begun) {
       app.showCanvas = true
+      app._playingUpdates++
 
       app.moveAllianceCursor(0)
       app.$nextTick(() => {

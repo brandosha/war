@@ -113,6 +113,8 @@ window.addEventListener("resize", () => {
 })
 
 export function renderBoard() {
+  if (canvas.style.display === "none") { return }
+  
   const { game } = server
   if (!game) { return }
 
@@ -203,7 +205,7 @@ export function renderBoard() {
       const col = mod(Math.round((x - ui.boardOffsetX) / squareSize), boardSize)
 
       const tile = board[row][col]
-      if (tile && row === ui.cursor[0] && col === ui.cursor[1]) {
+      if (tile && tile.owner === game.playerIndex && row === ui.cursor[0] && col === ui.cursor[1]) {
         const rectX = Math.floor(x - squareSize / 2)
         const rectY = Math.floor(y - squareSize / 2)
         const rectSide = Math.ceil(squareSize)
@@ -262,7 +264,7 @@ function move(direction) {
   if (!boardSize) { return }
 
   const tile0 = game.getTile(ui.cursor)
-  if (!tile0) {
+  if (!tile0 || tile0.owner !== game.playerIndex) {
     if (base) { ui.cursor = base }
 
     renderBoard()
@@ -353,6 +355,10 @@ document.addEventListener("keydown", e => {
  * @param { string } key 
  */
 export function keyPressed(key) {
+  const { game } = server
+  if (!game) { return }
+  if (game.isGameOver || !game.bases[game.playerIndex]) { return }
+
   if (key === "ArrowUp") {
     move("up")
   } else if (key === "ArrowDown") {

@@ -171,9 +171,11 @@ export default class Game {
     return tiles
   }
 
+  isGameOver = false
+
   haltForceDistribution?: () => void
   scheduleForceDistribution() {
-    if (!this.hasBegun || this.haltForceDistribution) { return }
+    if (!this.hasBegun || this.isGameOver || this.haltForceDistribution) { return }
 
     const boardSize = this.board.length
 
@@ -492,7 +494,12 @@ export default class Game {
 
     if (this.updateCallbacks.length <= 0) {
       this.haltForceDistribution?.()
-      Game.cache[this.id] = undefined
+
+      setTimeout(() => {
+        if (this.updateCallbacks.length <= 0) {
+          Game.cache[this.id] = undefined
+        }
+      }, 5000)
     }
   }
 
@@ -530,7 +537,8 @@ export default class Game {
       }
     }
 
-    if (basesCount <= 1) {
+    if (this.hasBegun && basesCount <= 1) {
+      this.isGameOver = true
       this.haltForceDistribution?.()
     }
   }

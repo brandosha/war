@@ -20,6 +20,8 @@ export class Game {
     this.board = []
     /** @type { Coordinate[] } */
     this.bases = []
+    /** @type { boolean } */
+    this.isGameOver = false
     /** @type { number } */
     this.playerIndex = -1
 
@@ -365,6 +367,7 @@ export class Game {
 
     this.bases = Array(this.players)
 
+    let basesCount = 0
     for (let r = 0; r < boardSize; r++) {
       const row = this.board[r]
       for (let c = 0; c < boardSize; c++) {
@@ -372,8 +375,13 @@ export class Game {
         
         if (tile && tile.base) {
           this.bases[tile.owner] = [r, c]
+          basesCount += 1
         }
       }
+    }
+
+    if (this.board.length && basesCount <= 1) {
+      this.isGameOver = true
     }
   }
 
