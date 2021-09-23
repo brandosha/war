@@ -36,6 +36,11 @@ kbd {
   pointer-events: initial;
 }
 
+.square-1 {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
 .square-2 {
   width: 2rem;
   height: 2rem;

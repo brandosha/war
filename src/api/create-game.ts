@@ -17,12 +17,10 @@ const createGame: APIFunction = async function(options, clientInfo, send, client
     exists = await game.load()
   }
 
-  game.addPlayer(playerId)
+  game.addPlayer(playerId, client)
   
-  send({
-    gameId: game.id
-  }, true)
-
+  clientInfo.gameId = game.id
+  send({ gameId: game.id }, true)
   subscribeUntilDisconnected(game, send, client)
 }
 

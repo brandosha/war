@@ -133,6 +133,7 @@ export function renderBoard() {
   const squareColumns = Math.floor(canvas.width / squareSize)
 
   // Draw the grid
+  ctx.clearRect(0, 0, canvas.width, canvas.height)
   ctx.strokeStyle = "#555"
   ctx.lineWidth = squareSize / 4
 
@@ -189,7 +190,7 @@ export function renderBoard() {
   // Draw cursor
   if (!ui.cursor || !app.playing) { return }
 
-  ctx.font = `${squareSize / 8}px sans-serif`
+  ctx.font = `${squareSize / 6}px sans-serif`
   ctx.strokeStyle = "#ddd"
   ctx.lineWidth = squareSize / 32
 
@@ -211,7 +212,7 @@ export function renderBoard() {
         const rectSide = Math.ceil(squareSize)
         ctx.strokeRect(rectX, rectY, rectSide, rectSide)
 
-        const smallRectSide = squareSize / 4
+        const smallRectSide = squareSize / 3
         ctx.fillStyle = "#ddd"
         ctx.fillRect(rectX, rectY, smallRectSide, smallRectSide)
 

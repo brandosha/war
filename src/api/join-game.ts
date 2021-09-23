@@ -29,8 +29,8 @@ const joinGame: APIFunction = function(options: Options, clientInfo, send, clien
       return
     }
 
-    send({ playerIndex: game.addPlayer(playerId) }, true)
-
+    clientInfo.gameId = game.id
+    send({ playerIndex: game.addPlayer(playerId, client) }, true)
     subscribeUntilDisconnected(game, send, client)
   } else {
     Game.cache[gameId] = undefined

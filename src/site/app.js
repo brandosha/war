@@ -1,6 +1,7 @@
 /** @typedef { import("./scripts/Game").Game } Game */
 import { center, keyPressed, renderBoard, ui } from "./scripts/ui.js"
 import { server } from "./scripts/Server.js"
+import { audioStream } from "./scripts/AudioStream.js"
 import { mod } from "./scripts/utils.js"
 
 const canvas = document.getElementById("canvas")
@@ -24,13 +25,18 @@ export const app = Vue.createApp({
       showTouchControls: true || window.matchMedia("(pointer: coarse)").matches,
       showInstruction: false,
 
+      micEnabled: false,
+      muted: true,
+
       begun: false,
       _playingUpdates: 0,
       showCanvas: false
     }
   },
   methods: {
-    async joinGame() {
+    async joinGame(clickEvent) {
+      if (clickEvent && this.muted) { this.toggleAudio() }
+
       try {
         this.gameId = this.gameId.toLowerCase()
         game = await server.joinGame(this.gameId)
@@ -51,6 +57,8 @@ export const app = Vue.createApp({
       this.playerIndex = game.playerIndex
       this.gameId = game.id
       location.hash = game.id
+
+      if (this.muted) { this.toggleAudio() }
     },
     shareLink() {
       navigator.share({
@@ -123,6 +131,25 @@ export const app = Vue.createApp({
       } else if (direction === "right") {
         return "m12.14 8.753-5.482 4.796c-.646.566-1.658.106-1.658-.753V3.204a1 1 0 0 1 1.659-.753l5.48 4.796a1 1 0 0 1 0 1.506z"
       }
+    },
+
+    async toggleMic() {
+      if (audioStream.micTrack) {
+        this.micEnabled = !this.micEnabled
+        audioStream.micEnabled = this.micEnabled
+      } else if (!this.micEnabled) {
+        try {
+          await audioStream.getMicTrack()
+          this.micEnabled = true
+        } catch (err) {
+          console.log(err)
+          this.micEnabled = false
+        }
+      }
+    },
+    async toggleAudio() {
+      this.muted = !this.muted
+      audioStream.muted = this.muted
     }
   },
   watch: {
@@ -155,7 +182,22 @@ export const app = Vue.createApp({
         localStorage.setItem("alliances", JSON.stringify(storedAlliances))
       },
       deep: true
-    }
+    },
+    /**
+     * @param { boolean } micEnabled 
+     */
+    // async micEnabled(micEnabled) {
+    //   if (audioStream.localAudio) {
+    //     audioStream.localAudio.getAudioTracks().forEach(track => track.enabled = !micEnabled)
+    //   } else if (!micEnabled) {
+    //     try {
+    //       await audioStream.getLocalAudio()
+    //     } catch (err) {
+    //       console.log(err)
+    //       this.micEnabled = true
+    //     }
+    //   }
+    // }
   },
   computed: {
     playing() {
@@ -174,9 +216,15 @@ window.app = app; ui.alliances = app.alliances
  * @param { Game } game 
  */
 function listenToGame(game) {
+  let firstUpdate = true
   let firstRender = true
 
   game.addUpdateListener(() => {
+    if (firstUpdate) {
+      firstUpdate = false
+      audioStream.signal()
+    }
+
     app.players = game.players
 
     const begun = game.board.length > 0
@@ -203,8 +251,8 @@ function listenToGame(game) {
             ui.cursor = myBase
             center(myBase[0], myBase[1])
 
-            const baseTile = game.getTile(myBase)
-            if (baseTile) { ui.mobilizingForce = baseTile.force }
+            // const baseTile = game.getTile(myBase)
+            // if (baseTile) { ui.mobilizingForce = baseTile.force }
           }
         }
         renderBoard()

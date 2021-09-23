@@ -85,7 +85,7 @@ export class Game {
   }
 
   begin() {
-    server.sendMessage("begin-game", { gameId: this.id })
+    server.sendMessage("begin-game")
   }
 
   /**
@@ -178,7 +178,7 @@ export class Game {
     if (tile0.force === 0) { this.setTile(fromTile, null) }
 
     this._triggerUpdateCallbacks()
-    server.sendMessage("mobilize", { gameId: this.id, force, fromTile, direction })
+    server.sendMessage("mobilize", { force, fromTile, direction })
 
     return true
   }
@@ -235,7 +235,7 @@ export class Game {
     }
 
     this._triggerUpdateCallbacks()
-    server.sendMessage("invade", { gameId: this.id, force, fromTile, direction })
+    server.sendMessage("invade", { force, fromTile, direction })
 
     return true
   }

@@ -1,23 +1,16 @@
 import { APIFunction } from "../APIUtils"
 import Game from "../Game"
 
-interface Options {
-  gameId?: string
-}
-
-const beginGame: APIFunction = async function(options: Options, clientInfo, send) {
-  const { playerId } = clientInfo
+const beginGame: APIFunction = async function(options, clientInfo, send) {
+  const { playerId, gameId } = clientInfo
   if (!playerId) {
     send({
       error: "Missing player id"
     }, true)
     return
-  }
-
-  const { gameId } = options
-  if (!gameId) {
+  } else if (!gameId) {
     send({
-      error: "Missing game id parameter"
+      error: "Missing game id"
     }, true)
     return
   }

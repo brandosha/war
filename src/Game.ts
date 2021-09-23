@@ -1,3 +1,4 @@
+import * as WebSocket from "ws"
 import { db } from "./Database"
 import { mod, mulberry32 } from "./utils"
 
@@ -21,6 +22,14 @@ export default class Game {
   board: Tile[][] = []
   players: string[] = []
   bases: Coordinate[] = []
+
+  connections: {
+    players: WebSocket[][]
+    observers: WebSocket[]
+  } = {
+    players: [],
+    observers: []
+  }
 
   constructor(id: string | null = null) {
     if (id) {
@@ -542,15 +551,60 @@ export default class Game {
     }
   }
 
-  addPlayer(playerId: string) {
+  addPlayer(playerId: string, connection: WebSocket) {
     let playerIndex = this.playerIndex(playerId)
-    if (this.hasBegun || playerIndex > -1) { return playerIndex }
+    if (this.hasBegun || playerIndex > -1) {
+      this.addConnection(playerIndex, connection)
+      return playerIndex
+    }
 
     playerIndex = this.players.length
     this.players.push(playerId)
+    this.connections.players.push([])
+    this.addConnection(playerIndex, connection)
+
     this.triggerUpdate()
 
     return playerIndex
+  }
+
+  private addConnection(playerIndex: number, connection: WebSocket) {
+    if (playerIndex <= -1) {
+      const observerConnections = this.connections.observers
+      observerConnections.push(connection)
+
+      connection.on("close", () => {
+        for (let i = 0; i < observerConnections.length; i++) {
+          if (observerConnections[i] === connection) {
+            observerConnections.splice(i, 1)
+            break
+          }
+        }
+      })
+      
+      return
+    }
+
+    const playerConnections = this.connections.players[playerIndex]
+    if (!playerConnections) { return }
+
+    playerConnections.push(connection)
+    connection.on("close", () => {
+      let removedAt = -1
+      for (let i = 0; i < playerConnections.length; i++) {
+        if (playerConnections[i] === connection) {
+          playerConnections.splice(i, 1)
+          removedAt = i
+          break
+        }
+      }
+
+      if (removedAt === 0 && playerConnections[0]) {
+        playerConnections[0].send(JSON.stringify({
+          rtcSignalRequest: true
+        }))
+      }
+    })
   }
 
   static generateId(length = 6) {

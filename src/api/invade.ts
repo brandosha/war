@@ -2,26 +2,30 @@ import { APIFunction } from "../APIUtils"
 import Game from "../Game"
 
 interface Options {
-  gameId: string,
   force: number,
   fromTile: [number, number],
   direction: string
 }
 
 const invade: APIFunction = async function(options: Options, clientInfo, send) {
-  const { playerId } = clientInfo
+  const { playerId, gameId } = clientInfo
   if (!playerId) {
     send({ error: "Missing player id" }, true)
     return
+  } else if (!gameId) {
+    send({
+      error: "Missing game id"
+    }, true)
+    return
   }
 
-  for (const key of ["gameId", "force", "fromTile", "direction"]) {
+  for (const key of ["force", "fromTile", "direction"]) {
     if (!options[key]) {
       send({ error: `Missing ${key} parameter` })
       return
     }
   }
-  const { gameId, force, fromTile, direction } = options
+  const { force, fromTile, direction } = options
 
   const game = new Game(gameId)
   if (await game.load()) {
