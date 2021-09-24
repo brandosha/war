@@ -134,12 +134,12 @@ export const app = Vue.createApp({
     },
 
     async toggleMic() {
+      if (!this.micEnabled && this.muted) { this.toggleAudio() }
+
       if (audioStream.micTrack) {
         this.micEnabled = !this.micEnabled
         audioStream.micEnabled = this.micEnabled
       } else if (!this.micEnabled) {
-        if (this.muted) { this.toggleAudio() }
-        
         try {
           await audioStream.getMicTrack()
           audioStream.micEnabled = true
@@ -153,6 +153,8 @@ export const app = Vue.createApp({
     async toggleAudio() {
       this.muted = !this.muted
       audioStream.muted = this.muted
+
+      if (this.muted && this.micEnabled) { this.toggleMic() }
     }
   },
   watch: {
@@ -185,22 +187,7 @@ export const app = Vue.createApp({
         localStorage.setItem("alliances", JSON.stringify(storedAlliances))
       },
       deep: true
-    },
-    /**
-     * @param { boolean } micEnabled 
-     */
-    // async micEnabled(micEnabled) {
-    //   if (audioStream.localAudio) {
-    //     audioStream.localAudio.getAudioTracks().forEach(track => track.enabled = !micEnabled)
-    //   } else if (!micEnabled) {
-    //     try {
-    //       await audioStream.getLocalAudio()
-    //     } catch (err) {
-    //       console.log(err)
-    //       this.micEnabled = true
-    //     }
-    //   }
-    // }
+    }
   },
   computed: {
     playing() {
@@ -212,7 +199,8 @@ export const app = Vue.createApp({
 }).mount("#app")
 
 // @ts-ignore
-window.app = app; ui.alliances = app.alliances
+window.app = app
+ui.alliances = app.alliances
 
 /**
  * 
@@ -253,9 +241,6 @@ function listenToGame(game) {
           if (myBase) {
             ui.cursor = myBase
             center(myBase[0], myBase[1])
-
-            // const baseTile = game.getTile(myBase)
-            // if (baseTile) { ui.mobilizingForce = baseTile.force }
           }
         }
         renderBoard()

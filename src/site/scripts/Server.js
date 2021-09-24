@@ -56,39 +56,8 @@ class Server {
             game._update(data.update)
           }
         } else if (data.rtcSignal) {
-          /** @type { { player: number, data?: { description?: RTCSessionDescriptionInit, candidate?: RTCIceCandidateInit } } } */
           const signal = data.rtcSignal
-          if (!signal.data) {
-            audioStream.peerConnections[signal.player] = undefined
-            audioStream.peerConnection(signal.player)
-          } else if (signal.data.description) {
-            const { description } = signal.data
-
-            if (description.type === "offer") {
-              const pc = audioStream.peerConnection(signal.player)
-              console.log("connection", signal.player, pc)
-  
-              pc.setRemoteDescription(description)
-              const answer = await pc.createAnswer()
-              await pc.setLocalDescription(answer)
-  
-              this.sendMessage("signal-rtc", {
-                player: signal.player,
-                data: {
-                  description: pc.localDescription
-                }
-              })
-            } else if (description.type === "answer") {
-              const pc = audioStream.peerConnections[signal.player]
-              if (!pc) { return }
-              console.log("connection", signal.player, pc)
-  
-              await pc.setRemoteDescription(description)
-            }
-          } else if (signal.data.candidate) {
-            const pc = audioStream.peerConnections[signal.player]
-            if (pc) { pc.addIceCandidate(signal.data.candidate) }
-          }
+          audioStream.recieveRTCSignal(signal.player, signal.data)
         }
       }
     }
@@ -148,6 +117,14 @@ class Server {
     this.game = new Game(gameId)
     this.game.playerIndex = gameInfo.playerIndex
     return this.game
+  }
+
+  /**
+   * @param { number } player
+   * @param { { description?: RTCSessionDescription | null, candidate?: RTCIceCandidateInit } } [data]
+   */
+  signalRTC(player, data) {
+    return this.sendMessage("signal-rtc", { player, data })
   }
 }
 
