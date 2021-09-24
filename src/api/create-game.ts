@@ -1,4 +1,4 @@
-import { APIFunction, subscribeUntilDisconnected } from "../APIUtils"
+import { APIFunction } from "../APIUtils"
 import Game from "../Game"
 
 const createGame: APIFunction = async function(options, clientInfo, send, client) {
@@ -21,7 +21,10 @@ const createGame: APIFunction = async function(options, clientInfo, send, client
   
   clientInfo.gameId = game.id
   send({ gameId: game.id }, true)
-  subscribeUntilDisconnected(game, send, client)
+  send({
+    gameId: game.id,
+    update: game.getUpdate()
+  })
 }
 
 export default createGame

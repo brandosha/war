@@ -9,12 +9,6 @@ interface StrongTile {
 }
 type Tile = StrongTile | null
 
-interface GameUpdate {
-  players: number,
-  board: string,
-  timestamp: number
-}
-
 export default class Game {
   readonly id: string
 
@@ -484,34 +478,7 @@ export default class Game {
     }
   }
 
-  private updateCallbacks: ((update: GameUpdate) => void)[] = []
-  addUpdateListener(callback: (update: GameUpdate) => void) {
-    this.updateCallbacks.push(callback)
-    callback(this.getUpdate())
-
-    this.scheduleForceDistribution()
-  }
-  removeUpdateListener(callback: (update: GameUpdate) => void) {
-    for (let i = 0; i < this.updateCallbacks.length; i++) {
-      const cb = this.updateCallbacks[i]
-      if (cb === callback) {
-        this.updateCallbacks.splice(i, 1)
-        break
-      }
-    }
-
-    if (this.updateCallbacks.length <= 0) {
-      this.haltForceDistribution?.()
-
-      setTimeout(() => {
-        if (this.updateCallbacks.length <= 0) {
-          Game.cache[this.id] = undefined
-        }
-      }, 30_000)
-    }
-  }
-
-  private getUpdate() {
+  getUpdate() {
     return {
       players: this.players.length,
       board: this.boardData(),
@@ -523,7 +490,27 @@ export default class Game {
     this.setBases()
 
     const update = this.getUpdate()
-    this.updateCallbacks.forEach(callback => callback(update))
+    const updateString = JSON.stringify({
+      gameId: this.id,
+      update
+    })
+
+    this.connections.observers.forEach(ws => {
+      try {
+        ws.send(updateString)
+      } catch (err) {
+        console.error(err)
+      }
+    })
+    this.connections.players.forEach(connections => {
+      connections.forEach(ws => {
+        try {
+          ws.send(updateString)
+        } catch (err) {
+          console.error(err)
+        }
+      })
+    })
   }
 
   private setBases() {
@@ -588,7 +575,7 @@ export default class Game {
     const playerConnections = this.connections.players[playerIndex]
     if (!playerConnections) { return }
 
-    playerConnections.push(connection)
+    playerConnections.unshift(connection)
     connection.on("close", () => {
       let removedAt = -1
       for (let i = 0; i < playerConnections.length; i++) {
@@ -604,7 +591,22 @@ export default class Game {
           rtcSignalRequest: true
         }))
       }
+
+      this.checkIfStillPlaying()
     })
+  }
+
+  private checkIfStillPlaying() {
+    const somePlayerConnected = () => this.connections.players.some(connections => connections.some(ws => ws.readyState === ws.OPEN))
+    
+    if (!somePlayerConnected()) {
+      setTimeout(() => {
+        if (!somePlayerConnected()) {
+          Game.cache[this.id] = undefined
+          this.haltForceDistribution?.()
+        }
+      }, 30_000)
+    }
   }
 
   static generateId(length = 6) {

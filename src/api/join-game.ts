@@ -1,4 +1,4 @@
-import { APIFunction, subscribeUntilDisconnected } from "../APIUtils"
+import { APIFunction } from "../APIUtils"
 import Game from "../Game"
 
 interface Options {
@@ -31,7 +31,11 @@ const joinGame: APIFunction = function(options: Options, clientInfo, send, clien
 
     clientInfo.gameId = game.id
     send({ playerIndex: game.addPlayer(playerId, client) }, true)
-    subscribeUntilDisconnected(game, send, client)
+
+    send({
+      gameId: game.id,
+      update: game.getUpdate()
+    })
   } else {
     Game.cache[gameId] = undefined
 

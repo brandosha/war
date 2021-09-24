@@ -96,7 +96,14 @@ class AudioStream {
     if (!forceReset && pc) { return pc }
 
     pc = new RTCPeerConnection({
-      iceServers: [{ urls: "stun:stun.l.google.com:19302" }]
+      iceServers: [
+        { urls: "stun:stun.l.google.com:19302" },
+        {
+          urls: "turn:numb.viagenie.ca",
+          credential: "muazkh",
+          username: "webrtc@live.com"
+        }
+      ]
     })
     this.peerConnections[player] = pc
 
@@ -133,10 +140,10 @@ class AudioStream {
       }
     }
 
-    if (this.localStream) {
-      this.localStream.getTracks().forEach(track => {
-        // @ts-ignore
-        pc.addTrack(track, this.localStream)
+    const micStream = this.localStream
+    if (micStream) {
+      micStream.getTracks().forEach(track => {
+        pc.addTrack(track, micStream)
       })
     }
 
