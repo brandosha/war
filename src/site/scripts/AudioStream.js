@@ -198,6 +198,12 @@ class AudioStream {
       console.error(err)
     }
   }
+
+  disconnect() {
+    this.peerConnections.forEach(pc => {
+      if (pc) { pc.close() }
+    })
+  }
 }
 
 export const audioStream = new AudioStream()

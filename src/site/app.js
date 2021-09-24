@@ -51,14 +51,14 @@ export const app = Vue.createApp({
       }
     },
     async createGame() {
+      if (this.muted) { this.toggleAudio() }
+      
       game = await server.createGame()
       listenToGame(game)
       
       this.playerIndex = game.playerIndex
       this.gameId = game.id
       location.hash = game.id
-
-      if (this.muted) { this.toggleAudio() }
     },
     shareLink() {
       navigator.share({
@@ -75,6 +75,7 @@ export const app = Vue.createApp({
       this.showCanvas = false
       server.game = undefined
       server._ws.close()
+      audioStream.disconnect()
     },
     startGame() {
       if (game) { game.begin() }
