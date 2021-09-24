@@ -283,14 +283,13 @@
       </div>
     </div>
 
-    <div v-once style="position: fixed; top: 0;">
-      <audio v-for="i in 8" :id="'audio-stream-' + (i - 1)"></audio>
+    <div v-once style="position: fixed; top: 0; width: 100vw; white-space: nowrap; overflow: auto;">
+      <audio v-for="i in 8" class="d-inline" :id="'audio-stream-' + (i - 1)" autoplay></audio>
     </div>
   </div>
   
   <canvas id="canvas" style="display: none;"></canvas>
   
-
   <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
   <script src="https://unpkg.com/vue@3"></script>
   <script src="app.js" type="module"></script>

@@ -3,17 +3,20 @@ import { server } from "./Server.js"
 
 class AudioStream {
   constructor() {
-    /** @type { RTCPeerConnection[] } */
+    /** @type { (RTCPeerConnection | undefined)[] } */
     this.peerConnections = Array(8)
 
-    /** @type { MediaStreamTrack? } */
-    this.micTrack = null
+    // /** @type { MediaStreamTrack? } */
+    // this.micTrack = null
+
+    /** @type { MediaStream? } */
+    this.localStream = null
 
     /** @type { HTMLAudioElement[] } */
     this.audioElements = Array(8)
 
     this._micEnabled = false
-    this._muted = false
+    this._muted = true
   }
 
   get micEnabled() {
@@ -22,9 +25,8 @@ class AudioStream {
   set micEnabled(enabled) {
     if (this.micTrack) {
       this.micTrack.enabled = enabled
+      this._micEnabled = enabled
     }
-
-    this._micEnabled = enabled
   }
 
   get muted() {
@@ -47,7 +49,7 @@ class AudioStream {
     console.log("mic", stream.getTracks())
     const micTrack = this.micTrack = stream.getAudioTracks()[0]
     if (!micTrack) { throw new Error("No mics found") }
-    
+
     this.micEnabled = !!this.micEnabled
 
     micTrack.onended = () => {
@@ -56,8 +58,11 @@ class AudioStream {
       this.micTrack = null
     }
 
+    const micStream = new MediaStream([micTrack])
+    this.localStream = micStream
     this.peerConnections.forEach(pc => {
-      pc.addTrack(micTrack)
+      if (!pc) { return }
+      pc.addTrack(micTrack, micStream)
     })
 
     return micTrack
@@ -65,11 +70,11 @@ class AudioStream {
 
   /**
    * @param { number } playerIndex 
-   * @param { MediaStreamTrack } track 
+   * @param { MediaStream } stream 
    */
-  setAudioStream(playerIndex, track) {
+  setAudioStream(playerIndex, stream) {
     this._initializeAudioElements()
-    this.audioElements[playerIndex].srcObject = new MediaStream([track])
+    this.audioElements[playerIndex].srcObject = stream
   }
 
   _initializeAudioElements() {
@@ -81,15 +86,18 @@ class AudioStream {
   }
 
   /**
-   * @param { RTCPeerConnection } pc 
-   * @param { number } playerIndex 
+   * @param { number } playerIndex
    */
-  setPeerConnection(pc, playerIndex) {
+  peerConnection(playerIndex) {
+    let pc = /** @type { RTCPeerConnection } */ (this.peerConnections[playerIndex])
+    if (pc) { return pc }
+
+    pc = new RTCPeerConnection()
     this.peerConnections[playerIndex] = pc
 
     pc.ontrack = event => {
-      console.log("track", playerIndex, event.track)
-      this.setAudioStream(playerIndex, event.track)
+      console.log("track", playerIndex, event.streams[0], event.streams[0].getTracks())
+      this.setAudioStream(playerIndex, event.streams[0])
     }
 
     pc.onicecandidate = event => {
@@ -104,9 +112,6 @@ class AudioStream {
 
     pc.onnegotiationneeded = async () => {
       console.log(pc.connectionState, pc.signalingState)
-      const { game } = server
-      if (!game) { return }
-      if (pc.connectionState !== "new" && game.playerIndex < playerIndex) { return }
 
       const offer = await pc.createOffer()
       await pc.setLocalDescription(offer)
@@ -119,7 +124,14 @@ class AudioStream {
       })
     }
 
-    if (this.micTrack) { pc.addTrack(this.micTrack) }
+    if (this.localStream) {
+      this.localStream.getTracks().forEach(track => {
+        // @ts-ignore
+        pc.addTrack(track, this.localStream)
+      })
+    }
+
+    return pc
   }
 
   async signal() {
@@ -132,7 +144,7 @@ class AudioStream {
       const existingPc = this.peerConnections[i]
       if (existingPc && ["connected", "connecting", "new"].includes(existingPc.connectionState)) { continue }
 
-      this.setPeerConnection(new RTCPeerConnection(), i)
+      this.peerConnection(i)
       server.sendMessage("signal-rtc", { player: i })
     }
   }

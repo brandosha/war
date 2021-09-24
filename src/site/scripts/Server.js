@@ -59,14 +59,14 @@ class Server {
           /** @type { { player: number, data?: { description?: RTCSessionDescriptionInit, candidate?: RTCIceCandidateInit } } } */
           const signal = data.rtcSignal
           if (!signal.data) {
-            audioStream.setPeerConnection(new RTCPeerConnection(), signal.player)
+            audioStream.peerConnections[signal.player] = undefined
+            audioStream.peerConnection(signal.player)
           } else if (signal.data.description) {
             const { description } = signal.data
 
             if (description.type === "offer") {
-              const pc = new RTCPeerConnection()
-              console.log(pc)
-              audioStream.setPeerConnection(pc, signal.player)
+              const pc = audioStream.peerConnection(signal.player)
+              console.log("connection", signal.player, pc)
   
               pc.setRemoteDescription(description)
               const answer = await pc.createAnswer()
@@ -81,7 +81,7 @@ class Server {
             } else if (description.type === "answer") {
               const pc = audioStream.peerConnections[signal.player]
               if (!pc) { return }
-              console.log(pc)
+              console.log("connection", signal.player, pc)
   
               await pc.setRemoteDescription(description)
             }

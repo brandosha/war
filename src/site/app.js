@@ -138,8 +138,11 @@ export const app = Vue.createApp({
         this.micEnabled = !this.micEnabled
         audioStream.micEnabled = this.micEnabled
       } else if (!this.micEnabled) {
+        if (this.muted) { this.toggleAudio() }
+        
         try {
           await audioStream.getMicTrack()
+          audioStream.micEnabled = true
           this.micEnabled = true
         } catch (err) {
           console.log(err)
